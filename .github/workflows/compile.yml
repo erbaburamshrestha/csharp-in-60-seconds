@@ -1,0 +1,29 @@
+name: Build all episodes
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build every episode with warnings as errors
+        run: |
+          status=0
+          for f in ep*/Program.cs; do
+            [ -f "$f" ] || continue
+            echo "::group::$f"
+            if dotnet build "$f" -p:TreatWarningsAsErrors=true; then
+              echo "OK: $f"
+            else
+              echo "::error file=$f::Build failed"
+              status=1
+            fi
+            echo "::endgroup::"
+          done
+          exit $status
